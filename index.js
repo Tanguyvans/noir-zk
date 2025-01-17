@@ -1,10 +1,16 @@
 import { compile, createFileManager } from "@noir-lang/noir_wasm";
-import { UltraHonkBackend, UltraPlonkBackend } from "@aztec/bb.js";
+import { UltraPlonkBackend } from "@aztec/bb.js";
 import { Noir } from "@noir-lang/noir_js";
 import initNoirC from "@noir-lang/noirc_abi";
 import initACVM from "@noir-lang/acvm_js";
-import acvm from "@noir-lang/acvm_js/web/acvm_js_bg.wasm?url";
-import noirc from "@noir-lang/noirc_abi/web/noirc_abi_wasm_bg.wasm?url";
+// import acvm from "@noir-lang/acvm_js/web/acvm_js_bg.wasm?url";
+// import noirc from "@noir-lang/noirc_abi/web/noirc_abi_wasm_bg.wasm?url";
+
+// Utiliser les URLs directes pour les fichiers WASM
+const acvm = "https://unpkg.com/@noir-lang/acvm_js@1.0.0-beta.0/web/acvm_js_bg.wasm";
+const noirc = "https://unpkg.com/@noir-lang/noirc_abi@1.0.0-beta.0/web/noirc_abi_wasm_bg.wasm";
+
+
 await Promise.all([initACVM(fetch(acvm)), initNoirC(fetch(noirc))]);
 
 // import main from "./circuit/src/main.nr?url";
