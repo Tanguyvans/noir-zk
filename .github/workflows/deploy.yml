@@ -3,7 +3,11 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main # ou master, selon votre branche principale
+      - main
+
+# Ajout des permissions
+permissions:
+  contents: write
 
 jobs:
   build-and-deploy:
