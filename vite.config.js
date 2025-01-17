@@ -1,1 +1,11 @@
-export default { optimizeDeps: { esbuildOptions: { target: "esnext" } } };
+export default { 
+    base: '/noir-zk/',
+    build: {
+      target: 'esnext'
+    },
+    optimizeDeps: { 
+      esbuildOptions: { 
+        target: "esnext" 
+      } 
+    } 
+  };
