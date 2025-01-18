@@ -1119,10 +1119,59 @@ global b1: [Field; 20] = [
     -9811, 6546, 3609, 29218, 7488, 1966,
 ];
 
+global w2: [Field; 200] = [
+    27295, -45376, -37563, -30104, 1446, -10707, 25676, -1490, -31728, 32030, 9905, -6482, 4040,
+    31281, -38256, 12364, 23138, -4159, -56148, -33924, 18554, 25963, -43196, 28141, 10248, 15883,
+    70903, -4252, 35658, -52053, -10290, 15382, -42163, -2720, -24565, -16038, -15361, -52786,
+    -25755, 33890, 12498, 10330, -27100, -87839, -4190, -4803, -22179, -26414, 36168, -30184,
+    -47833, -19363, -20411, 31426, 45089, 40670, 26196, -9328, -44887, 44484, 25352, 45986, -19656,
+    -33972, -32161, 20427, -41358, -35658, -29890, 13500, -43142, -50024, 11617, -18657, -10999,
+    17604, 4712, -37009, 24889, 4124, -39182, -1488, -25791, -7136, -43076, 39870, 33276, 35401,
+    -39141, -2302, 26114, 20284, -13440, 35709, 5037, -51876, 30310, -25684, 10045, -34664, -10427,
+    20362, 30418, 16489, -50231, -60951, -41502, -681, 46341, -712, 47582, 42178, 6009, -74461,
+    -38373, -8956, 38054, 1053, -48067, -10223, 3817, -55, -24305, -21858, 38104, -16552, -8760,
+    34133, -14759, -29629, 56646, -55202, 42737, -44570, 16665, -11036, 15119, -16320, -10518,
+    -24432, -40489, 12545, 353, -29006, 2259, 26438, -5016, -48603, 23945, 9335, -17380, 19972,
+    -26601, 19842, -56026, 38695, -48938, 30198, 29685, 14707, 23082, 3569, 32693, 9793, 15868,
+    14190, -40285, 37654, -69241, 13708, -48834, -67311, -25002, -13954, -4743, -38403, 349, -20864,
+    -45577, 15727, -28937, 9084, 26797, 22865, 16576, -34071, 31771, -2108, -28858, 12141, -6919,
+    -20644, -50016, 34668, 15557, 448, 4202, -33498, 36439, -83921,
+];
+
+global b2: [Field; 10] = [-16744, 7669, 1952, 2353, -1842, 25805, -3660, 16194, -16406, -21487];
+
 global comp_constant_bytes: [u8; 32] = [
     0x00, 0x00, 0x00, 0xf8, 0xc9, 0xfa, 0xf0, 0xa1, 0x48, 0xb8, 0xdc, 0x3c, 0x24, 0xf4, 0x19, 0x94,
     0x2e, 0xac, 0xc0, 0x40, 0xdb, 0x22, 0x28, 0xdc, 0x14, 0xd0, 0x98, 0x70, 0x39, 0x27, 0x32, 0x18,
 ];
+
+pub fn fc1(x: [Field; 784], w: [Field; 15680], b: [Field; 20]) -> [Field; 20] {
+    assert(15680 == 784 * 20);
+
+    let mut result = [0; 20];
+
+    for i in 0..20 {
+        for j in 0..784 {
+            result[i] += w[i * 784 + j] * x[j];
+        }
+        result[i] += b[i];
+    }
+    result
+}
+
+pub fn fc2(x: [Field; 20], w: [Field; 200], b: [Field; 10]) -> [Field; 10] {
+    assert(200 == 20 * 10);
+
+    let mut result = [0; 10];
+
+    for i in 0..10 {
+        for j in 0..20 {
+            result[i] += w[i * 20 + j] * x[j];
+        }
+        result[i] += b[i];
+    }
+    result
+}
 
 pub fn is_positive(value: Field) -> bool {
     let value_bytes: [u8; 32] = value.to_le_bytes();
@@ -1143,20 +1192,6 @@ pub fn is_positive(value: Field) -> bool {
     result
 }
 
-pub fn fc1(x: [Field; 784], w: [Field; 15680], b: [Field; 20]) -> [Field; 20] {
-    assert(15680 == 784 * 20);
-
-    let mut result = [0; 20];
-
-    for i in 0..20 {
-        for j in 0..784 {
-            result[i] += w[i * 784 + j] * x[j];
-        }
-        result[i] += b[i];
-    }
-    result
-}
-
 pub fn relu(values: [Field; 20]) -> [Field; 20] {
     let mut result = [0; 20];
 
@@ -1168,7 +1203,55 @@ pub fn relu(values: [Field; 20]) -> [Field; 20] {
     result
 }
 
+fn is_greater_than(x: Field, value: Field) -> bool {
+    let x_bytes: [u8; 32] = x.to_le_bytes();
+    let value_bytes: [u8; 32] = value.to_le_bytes();
+
+    let mut result: bool = false;
+    let mut done: bool = false;
+
+    for i in 0..32 {
+        if !done {
+            let byte1 = x_bytes[31 - i] as u8;
+            let byte2 = value_bytes[31 - i] as u8;
+            if byte1 != byte2 {
+                done = true;
+                result = byte1 > byte2;
+            }
+        }
+    }
+    result
+}
+
+pub fn is_greater_than_signed(x: Field, value: Field) -> bool {
+    let x_is_positive = is_positive(x);
+    let value_is_positive = is_positive(value);
+
+    if (x_is_positive == value_is_positive) {
+        is_greater_than(x, value)
+    } else {
+        x_is_positive > value_is_positive
+    }
+}
+
+pub fn arg_max(values: [Field; 10]) -> Field {
+    assert(10 > 0);
+
+    let mut max_index = 0 as Field;
+    let mut max_value = values[0];
+
+    for i in 1..10 {
+        let value = values[i];
+        if is_greater_than_signed(value, max_value) {
+            max_value = value;
+            max_index = i as Field;
+        }
+    }
+    max_index
+}
+
 fn main(input: [Field; 784]) -> pub Field {
     let output = relu(fc1(input, w1, b1));
-    output[0]
+    let output = arg_max(fc2(output, w2, b2));
+    output
 }
