@@ -1119,6 +1119,30 @@ global b1: [Field; 20] = [
     -9811, 6546, 3609, 29218, 7488, 1966,
 ];
 
+global comp_constant_bytes: [u8; 32] = [
+    0x00, 0x00, 0x00, 0xf8, 0xc9, 0xfa, 0xf0, 0xa1, 0x48, 0xb8, 0xdc, 0x3c, 0x24, 0xf4, 0x19, 0x94,
+    0x2e, 0xac, 0xc0, 0x40, 0xdb, 0x22, 0x28, 0xdc, 0x14, 0xd0, 0x98, 0x70, 0x39, 0x27, 0x32, 0x18,
+];
+
+pub fn is_positive(value: Field) -> bool {
+    let value_bytes: [u8; 32] = value.to_le_bytes();
+
+    let mut result: bool = true;
+    let mut done: bool = false;
+
+    for i in 0..32 {
+        if !done {
+            let byte1 = value_bytes[31 - i] as u8;
+            let byte2 = comp_constant_bytes[31 - i] as u8;
+            if byte1 != byte2 {
+                done = true;
+                result = byte1 < byte2;
+            }
+        }
+    }
+    result
+}
+
 pub fn fc1(x: [Field; 784], w: [Field; 15680], b: [Field; 20]) -> [Field; 20] {
     assert(15680 == 784 * 20);
 
@@ -1133,7 +1157,18 @@ pub fn fc1(x: [Field; 784], w: [Field; 15680], b: [Field; 20]) -> [Field; 20] {
     result
 }
 
+pub fn relu(values: [Field; 20]) -> [Field; 20] {
+    let mut result = [0; 20];
+
+    for i in 0..20 {
+        if is_positive(values[i]) {
+            result[i] = values[i];
+        }
+    }
+    result
+}
+
 fn main(input: [Field; 784]) -> pub Field {
-    let output = fc1(input, w1, b1);
+    let output = relu(fc1(input, w1, b1));
     output[0]
 }

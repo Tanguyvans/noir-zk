@@ -1,17 +1,10 @@
 export default { 
-    base: '/noir-zk/',
-    build: {
-      target: 'esnext',
-      rollupOptions: {
-        input: {
-          main: './index.html',
-        },
-      },
-      assetsInclude: ['**/*.nr', '**/*.toml', '**/*.wasm'],
-    },
-    optimizeDeps: { 
-      esbuildOptions: { 
-        target: "esnext" 
-      } 
+  build: {
+    target: 'esnext'
+  },
+  optimizeDeps: { 
+    esbuildOptions: { 
+      target: "esnext" 
     } 
-  };
+  } 
+};
